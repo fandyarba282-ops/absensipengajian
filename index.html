@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Mandiri Muda-Mudi</title>
+    <!-- Library Scanner QR Code -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root { --primary: #059669; --bg: #f3f4f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        .card { background: white; padding: 20px; border-radius: 12px; max-width: 450px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        .form-group { text-align: left; margin-bottom: 12px; }
+        label { font-weight: bold; font-size: 13px; color: #374151; }
+        input, select { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        button { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        #reader { width: 100%; margin-top: 15px; border-radius: 8px; overflow: hidden; }
+        .hidden { display: none; }
+        .user-info { background: #e0f2fe; padding: 10px; border-radius: 6px; color: #0369a1; margin-bottom: 15px; text-align: left; font-size: 14px; line-height: 1.5; }
+        .flex-row { display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🕌 Absensi Pengajian</h2>
+
+    <!-- HALAMAN 1: FORM LOGIN / REGISTRASI -->
+    <div id="secLogin">
+        <p style="font-size: 14px; color: #4b5563;">Isi data diri Anda sekali saja. Selanjutnya tinggal scan QR Code.</p>
+        <form onsubmit="simpanSesiLokal(event)">
+            
+            <div class="flex-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="memberNama" required placeholder="Sesuai KTP/KK">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Panggilan</label>
+                    <input type="text" id="memberPanggilan" required placeholder="Nama akrab">
+                </div>
+            </div>
+
+            <div class="flex-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Jenis Kelamin</label>
+                    <select id="memberJK">
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Alamat / Dusun</label>
+                    <input type="text" id="memberAlamat" required placeholder="Contoh: RT 01">
+                </div>
+            </div>
+
+            <div class="flex-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>No. WA Anda</label>
+                    <input type="tel" id="memberHP" required placeholder="08xxx">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>No. HP Ortu</label>
+                    <input type="tel" id="memberHPOrtu" required placeholder="08xxx">
+                </div>
+            </div>
+
+            <button type="submit">Masuk ke Scanner 🚀</button>
+        </form>
+    </div>
+
+    <!-- HALAMAN 2: SCANNER QR -->
+    <div id="secScanner" class="hidden">
+        <div id="userInfo" class="user-info"></div>
+        <p style="font-size: 14px;">Arahkan kamera ke <b>QR Code Pengurus</b> untuk absen.</p>
+        
+        <div id="reader"></div>
+        <div id="statusResult" style="margin-top: 15px; font-weight: bold;"></div>
+
+        <button onclick="keluarSesi()" style="background: #ef4444; margin-top: 20px;">Ganti Akun / Logout</button>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = 'URL_GOOGLE_APPS_SCRIPT_ANDA_DI_SINI';
+    let html5QrcodeScanner = null;
+
+    // Cek apakah user sudah pernah login
+    window.onload = function() {
+        const savedUser = localStorage.getItem('user_pengajian');
+        if (savedUser) {
+            tampilkanScanner(JSON.parse(savedUser));
+        }
+    };
+
+    function simpanSesiLokal(e) {
+        e.preventDefault();
+        
+        // Simpan SEMUA data lengkap
+        const user = {
+            nama: document.getElementById('memberNama').value.trim(),
+            panggilan: document.getElementById('memberPanggilan').value.trim(),
+            jk: document.getElementById('memberJK').value,
+            alamat: document.getElementById('memberAlamat').value.trim(),
+            hp: document.getElementById('memberHP').value.trim(),
+            hportu: document.getElementById('memberHPOrtu').value.trim()
+        };
+        
+        localStorage.setItem('user_pengajian', JSON.stringify(user));
+        tampilkanScanner(user);
+    }
+
+    function tampilkanScanner(user) {
+        document.getElementById('secLogin').classList.add('hidden');
+        document.getElementById('secScanner').classList.remove('hidden');
+        
+        // Tampilkan info user di atas scanner
+        document.getElementById('userInfo').innerHTML = `
+            👤 <b>${user.nama}</b> (${user.panggilan})<br>
+            📍 ${user.alamat} | 📱 WA: ${user.hp}
+        `;
+
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } });
+        html5QrcodeScanner.render(onScanSuccess);
+    }
+
+    async function onScanSuccess(decodedText, decodedResult) {
+        html5QrcodeScanner.clear(); // Stop sementara biar ga dobel scan
+        
+        const statusDiv = document.getElementById('statusResult');
+        statusDiv.innerHTML = '⏳ Mengirim data & absensi...';
+        statusDiv.style.color = 'orange';
+
+        const user = JSON.parse(localStorage.getItem('user_pengajian'));
+
+        // Payload data lengkap untuk dikirim ke backend
+        const payload = {
+            action: "absen_qr_mandiri",
+            qrContent: decodedText,
+            nama: user.nama,
+            panggilan: user.panggilan,
+            jk: user.jk,
+            alamat: user.alamat,
+            hp: user.hp,
+            hportu: user.hportu
+        };
+
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            statusDiv.innerHTML = '✅ Berhasil Absen!';
+            statusDiv.style.color = 'green';
+        } catch (err) {
+            statusDiv.innerHTML = '❌ Gagal. Cek internet Anda.';
+            statusDiv.style.color = 'red';
+        }
+
+        setTimeout(() => { tampilkanScanner(user); }, 3000);
+    }
+
+    function keluarSesi() {
+        if(confirm("Yakin ingin ganti profil/akun?")) {
+            localStorage.removeItem('user_pengajian');
+            if (html5QrcodeScanner) html5QrcodeScanner.clear();
+            document.getElementById('secScanner').classList.add('hidden');
+            document.getElementById('secLogin').classList.remove('hidden');
+        }
+    }
+</script>
+
+</body>
+</html>
