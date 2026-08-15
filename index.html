@@ -22,20 +22,23 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 0;
+            padding: 15px;
             display: flex;
             justify-content: center;
             min-height: 100vh;
+            align-items: flex-start;
         }
 
         .app-container {
             width: 100%;
-            max-width: 480px; /* Ukuran mobile */
+            max-width: 450px; 
             background-color: var(--card-bg);
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
+            margin-top: 10px;
         }
 
         .header {
@@ -43,21 +46,24 @@
             color: white;
             padding: 20px;
             text-align: center;
-            border-bottom-left-radius: 15px;
-            border-bottom-right-radius: 15px;
         }
 
-        .header h2 { margin: 0; font-size: 1.2rem; }
+        .header h2 { margin: 0; font-size: 1.3rem; }
+        .header p { margin: 5px 0 0 0; font-size: 0.9rem; opacity: 0.9; }
         
-        .content { padding: 20px; flex: 1; }
+        .content { padding: 20px; }
 
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem;}
+        /* Form Styles */
+        .flex-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .form-group { flex: 1; margin-bottom: 12px; }
+        .flex-row .form-group { margin-bottom: 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.85rem; color: #374151;}
         .form-group input, .form-group select {
-            width: 100%; padding: 12px; border: 1px solid #ccc;
-            border-radius: 8px; box-sizing: border-box; font-size: 1rem;
+            width: 100%; padding: 10px; border: 1px solid #ccc;
+            border-radius: 8px; box-sizing: border-box; font-size: 0.95rem;
         }
 
+        /* Buttons */
         .btn {
             width: 100%; padding: 14px;
             background-color: var(--primary); color: white;
@@ -68,73 +74,106 @@
         }
         .btn:hover { background-color: var(--primary-hover); }
         .btn-outline {
-            background-color: transparent; color: var(--primary);
-            border: 2px solid var(--primary);
+            background-color: transparent; color: #dc2626;
+            border: 2px solid #dc2626;
         }
+        .btn-outline:hover { background-color: #fef2f2; }
 
-        /* Tampilan Scanner */
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-top: 15px;}
+        /* Scanner */
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-top: 15px; border: none; }
         
         /* Notifikasi */
         .alert {
-            padding: 15px; border-radius: 8px; margin-bottom: 15px;
-            display: none; text-align: center; font-weight: bold;
+            padding: 12px; border-radius: 8px; margin-bottom: 15px;
+            display: none; text-align: center; font-weight: bold; font-size: 0.9rem;
         }
         .alert.success { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;}
         .alert.error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca;}
         .alert.loading { background-color: #e0f2fe; color: #075985; border: 1px solid #bae6fd;}
 
+        /* Profile Card Dashboard */
         .profile-card {
             background: #f8fafc; border: 1px solid #e2e8f0;
             padding: 15px; border-radius: 8px; margin-bottom: 20px;
         }
-        .profile-card h3 { margin: 0 0 5px 0; color: var(--primary); }
-        .profile-card p { margin: 0; font-size: 0.9rem; color: #64748b;}
-        
-        /* Hilangkan bagian UI default html5-qrcode yang jelek */
-        #reader__dashboard_section_csr span { color: red !important; }
+        .profile-card h3 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.1rem; }
+        .profile-card p { margin: 3px 0; font-size: 0.85rem; color: #475569;}
+        .edit-link { font-size: 0.8rem; color: #2563eb; text-decoration: none; font-weight: bold; margin-top: 8px; display: inline-block; cursor: pointer;}
+        .edit-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <h2>Aplikasi Absensi Anggota</h2>
+        <h2>🕌 Absensi Pengajian</h2>
+        <p>Muda-Mudi Mandiri</p>
     </div>
 
     <div class="content">
         <!-- Notifikasi -->
         <div id="alertBox" class="alert"></div>
 
-        <!-- BAGIAN 1: FORM LOGIN / DATA DIRI -->
+        <!-- HALAMAN 1: FORM LOGIN / REGISTRASI -->
         <div id="section-login" style="display: none;">
-            <h3 style="text-align: center; margin-bottom: 5px;">Selamat Datang!</h3>
-            <p style="text-align: center; font-size: 0.9rem; color: #666; margin-bottom: 20px;">Silakan isi data diri Anda di HP ini untuk mulai absen.</p>
-            
-            <div class="form-group">
-                <label>Nama Lengkap (Sesuai KTP/Daftar)</label>
-                <input type="text" id="inputNama" placeholder="Contoh: Muhammad Ali">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h3 style="margin: 0 0 5px 0; color: var(--text-color);">Selamat Datang!</h3>
+                <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Isi data diri Anda di HP ini untuk mulai absen. Hanya perlu diisi sekali.</p>
             </div>
-            <div class="form-group">
-                <label>Nama Panggilan</label>
-                <input type="text" id="inputPanggilan" placeholder="Contoh: Ali">
-            </div>
-            <div class="form-group">
-                <label>Jenis Kelamin</label>
-                <select id="inputJK">
-                    <option value="L">Laki-Laki (L)</option>
-                    <option value="P">Perempuan (P)</option>
-                </select>
-            </div>
-            <button class="btn" onclick="simpanDataDiri()">Simpan & Lanjut</button>
+
+            <form onsubmit="simpanDataDiri(event)">
+                <div class="form-group">
+                    <label>Nama Lengkap (Sesuai Daftar)</label>
+                    <input type="text" id="inputNama" required placeholder="Contoh: Muhammad Ali">
+                </div>
+
+                <div class="flex-row">
+                    <div class="form-group">
+                        <label>Panggilan</label>
+                        <input type="text" id="inputPanggilan" required placeholder="Contoh: Ali">
+                    </div>
+                    <div class="form-group">
+                        <label>Jenis Kelamin</label>
+                        <select id="inputJK">
+                            <option value="Laki-laki">Laki-Laki (L)</option>
+                            <option value="Perempuan">Perempuan (P)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Alamat / Dusun / RT</label>
+                    <input type="text" id="inputAlamat" required placeholder="Contoh: Dusun Krajan RT 01">
+                </div>
+
+                <div class="flex-row">
+                    <div class="form-group">
+                        <label>No. WA Anda</label>
+                        <input type="tel" id="inputHP" required placeholder="0812xxxx">
+                    </div>
+                    <div class="form-group">
+                        <label>No. HP Orang Tua</label>
+                        <input type="tel" id="inputHPOrtu" placeholder="085xxxx (Opsional)">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">Simpan & Lanjut 🚀</button>
+            </form>
         </div>
 
-        <!-- BAGIAN 2: DASHBOARD & SCANNER -->
+        <!-- HALAMAN 2: DASHBOARD & SCANNER -->
         <div id="section-dashboard" style="display: none;">
+            
             <div class="profile-card">
-                <h3 id="displayNama">Nama</h3>
-                <p id="displayInfo">Laki-Laki</p>
-                <a href="#" onclick="editDataDiri()" style="font-size: 0.8rem; color: var(--primary); text-decoration: underline; margin-top: 5px; display: inline-block;">Edit Data Diri</a>
+                <h3 id="displayNama">Nama Lengkap</h3>
+                <p>👤 <span id="displayPanggilan">Panggilan</span> | <span id="displayJK">L/P</span></p>
+                <p>📍 <span id="displayAlamat">Alamat</span></p>
+                <p>📱 WA: <span id="displayHP">08xx</span></p>
+                <a onclick="editDataDiri()" class="edit-link">✏️ Edit Data Diri (Ganti Akun)</a>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 15px; font-size: 0.9rem; color: #475569;">
+                Arahkan kamera ke <b>QR Code Pengurus</b> untuk mengisi kehadiran.
             </div>
 
             <div id="btnStartScanContainer">
@@ -145,12 +184,13 @@
                 <div id="reader"></div>
                 <button class="btn btn-outline" style="margin-top: 15px;" onclick="hentikanScan()">❌ Batal Scan</button>
             </div>
+            
         </div>
     </div>
 </div>
 
 <script>
-    // ⚠️ PENTING: Ganti dengan SCRIPT URL Anda!
+    // ⚠️ PENTING: Ganti dengan SCRIPT URL Google Apps Script Anda yang valid!
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMrPVtBHz5Vo50ucH5Mcmt5ubE7Bau-e3VKk0NpyxeJpi5Qf3AGdnmuvZ1CWug1jshfg/exec'; 
 
     let html5QrCode;
@@ -158,7 +198,7 @@
 
     // 1. CEK STATUS SAAT APLIKASI DIBUKA
     window.onload = function() {
-        const savedData = localStorage.getItem('memberData');
+        const savedData = localStorage.getItem('memberData_pengajian');
         if (savedData) {
             dataAnggota = JSON.parse(savedData);
             tampilkanDashboard();
@@ -168,58 +208,81 @@
     };
 
     // 2. FUNGSI SIMPAN DATA DIRI (LOGIN)
-    function simpanDataDiri() {
+    function simpanDataDiri(e) {
+        e.preventDefault(); // Mencegah reload halaman
+        
         const nama = document.getElementById('inputNama').value.trim();
         const panggilan = document.getElementById('inputPanggilan').value.trim();
         const jk = document.getElementById('inputJK').value;
+        const alamat = document.getElementById('inputAlamat').value.trim();
+        const hp = document.getElementById('inputHP').value.trim();
+        const hportu = document.getElementById('inputHPOrtu').value.trim();
 
-        if (!nama) {
-            showAlert('error', 'Nama Lengkap wajib diisi!');
+        if (!nama || !alamat || !hp) {
+            showAlert('error', 'Nama, Alamat, dan No HP wajib diisi!');
             return;
         }
 
-        dataAnggota = { nama, panggilan, jk };
-        localStorage.setItem('memberData', JSON.stringify(dataAnggota));
+        // Kumpulkan data ke dalam objek
+        dataAnggota = { nama, panggilan, jk, alamat, hp, hportu };
         
+        // Simpan ke memory lokal HP
+        localStorage.setItem('memberData_pengajian', JSON.stringify(dataAnggota));
+
         showAlert('success', 'Data tersimpan di HP ini!');
+        
+        // Pindah ke Dashboard setelah 1 detik
         setTimeout(() => {
             tampilkanDashboard();
         }, 1000);
     }
 
-    function editDataDiri() {
-        document.getElementById('inputNama').value = dataAnggota.nama;
-        document.getElementById('inputPanggilan').value = dataAnggota.panggilan;
-        document.getElementById('inputJK').value = dataAnggota.jk;
-        
-        document.getElementById('section-dashboard').style.display = 'none';
-        document.getElementById('section-login').style.display = 'block';
-    }
-
+    // 3. TAMPILKAN HALAMAN DASHBOARD & ISI PROFIL
     function tampilkanDashboard() {
         document.getElementById('section-login').style.display = 'none';
         document.getElementById('section-dashboard').style.display = 'block';
-        
+
+        // Tampilkan info yang sudah disave
         document.getElementById('displayNama').innerText = dataAnggota.nama;
-        document.getElementById('displayInfo').innerText = (dataAnggota.jk === 'L' ? 'Laki-Laki' : 'Perempuan') + ' | ' + (dataAnggota.panggilan || '');
+        document.getElementById('displayPanggilan').innerText = dataAnggota.panggilan || '-';
+        document.getElementById('displayJK').innerText = dataAnggota.jk;
+        document.getElementById('displayAlamat').innerText = dataAnggota.alamat;
+        document.getElementById('displayHP').innerText = dataAnggota.hp;
         
         hideAlert();
     }
 
-    // 3. FUNGSI SCANNER
+    // 4. KEMBALI KE FORM UNTUK EDIT DATA
+    function editDataDiri() {
+        if(confirm("Yakin ingin edit data atau ganti akun?")) {
+            // Isi form dengan data lama
+            document.getElementById('inputNama').value = dataAnggota.nama || '';
+            document.getElementById('inputPanggilan').value = dataAnggota.panggilan || '';
+            document.getElementById('inputJK').value = dataAnggota.jk || 'Laki-laki';
+            document.getElementById('inputAlamat').value = dataAnggota.alamat || '';
+            document.getElementById('inputHP').value = dataAnggota.hp || '';
+            document.getElementById('inputHPOrtu').value = dataAnggota.hportu || '';
+
+            hentikanScan(); // pastikan kamera mati
+            document.getElementById('section-dashboard').style.display = 'none';
+            document.getElementById('section-login').style.display = 'block';
+        }
+    }
+
+    // 5. FUNGSI SCANNER
     function mulaiScan() {
+        hideAlert();
         document.getElementById('btnStartScanContainer').style.display = 'none';
         document.getElementById('scannerContainer').style.display = 'block';
         
         // Inisialisasi scanner
         html5QrCode = new Html5Qrcode("reader");
-        
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-        
+
         // Gunakan kamera belakang (environment)
         html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
         .catch((err) => {
-            showAlert('error', 'Gagal mengakses kamera. Pastikan izin kamera diberikan.');
+            showAlert('error', 'Gagal mengakses kamera. Pastikan izin kamera diberikan di browser Anda.');
             hentikanScan();
         });
     }
@@ -229,48 +292,53 @@
             html5QrCode.stop().then(() => {
                 document.getElementById('scannerContainer').style.display = 'none';
                 document.getElementById('btnStartScanContainer').style.display = 'block';
-            }).catch(err => console.log(err));
+            }).catch(err => console.log("Gagal menghentikan kamera", err));
         }
     }
 
-    // 4. JIKA QR BERHASIL DI-SCAN
+    // 6. JIKA QR BERHASIL DI-SCAN
     function onScanSuccess(decodedText) {
-        hentikanScan(); // Matikan kamera
+        hentikanScan(); // Langsung matikan kamera
         
-        // Cek apakah format QR sesuai format admin (PENGAJIAN|Tanggal|Topik)
+        // Opsi pengaman: Cek apakah format QR diawali dengan kata kunci (contoh "PENGAJIAN|")
+        // Jika QR Anda tidak pakai prefix, hapus/komentari blok if di bawah ini.
         if (!decodedText.startsWith("PENGAJIAN|")) {
-            showAlert('error', 'QR Code tidak valid! Pastikan Anda scan QR dari Admin Pengajian.');
+            showAlert('error', '❌ QR Code tidak valid! Pastikan Anda scan QR dari Admin Pengajian.');
             return;
         }
 
         kirimDataAbsen(decodedText);
     }
 
-    // 5. KIRIM DATA KE GOOGLE APPS SCRIPT
+    // 7. KIRIM DATA KE GOOGLE APPS SCRIPT
     function kirimDataAbsen(qrContent) {
         showAlert('loading', '⏳ Sedang mengirim data absen...');
 
+        // Gabungkan perintah absen, isi QR, dan profil user lengkap
         const payload = {
             action: "absen_qr_mandiri",
+            qrContent: qrContent,
             nama: dataAnggota.nama,
             panggilan: dataAnggota.panggilan,
             jk: dataAnggota.jk,
-            qrContent: qrContent
+            alamat: dataAnggota.alamat,
+            hp: dataAnggota.hp,
+            hportu: dataAnggota.hportu
         };
 
         fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // Penting untuk melewati CORS error dari Google
+            mode: 'no-cors', // Melewati blokir CORS Google
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
         .then(() => {
-            // Karena no-cors, response tidak bisa dibaca langsung, tapi jika masuk block then() berarti sukses terkirim.
-            showAlert('success', `✅ Absen Berhasil!<br>Terima kasih, ${dataAnggota.panggilan || dataAnggota.nama}.`);
+            // Karena no-cors, success response tidak terbaca utuh, namun jika masuk block then = sukses
+            showAlert('success', `✅ Absen Berhasil!<br>Kehadiran atas nama <b>${dataAnggota.panggilan}</b> telah tercatat.`);
         })
         .catch(error => {
             showAlert('error', '❌ Gagal mengirim absen. Periksa koneksi internet Anda.');
-            console.error('Error:', error);
+            console.error('Fetch Error:', error);
         });
     }
 
