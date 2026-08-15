@@ -73,6 +73,7 @@
             margin-top: 10px;
         }
         .btn:hover { background-color: var(--primary-hover); }
+        .btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
         .btn-outline {
             background-color: transparent; color: #dc2626;
             border: 2px solid #dc2626;
@@ -157,7 +158,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn">Simpan & Lanjut 🚀</button>
+                <button type="submit" id="btnSubmitReg" class="btn">Simpan & Lanjut 🚀</button>
             </form>
         </div>
 
@@ -207,7 +208,7 @@
         }
     };
 
-    // 2. FUNGSI SIMPAN DATA DIRI (LOGIN)
+    // 2. FUNGSI SIMPAN DATA DIRI & LANGSUNG KIRIM KE SPREADSHEET (BARU)
     function simpanDataDiri(e) {
         e.preventDefault(); // Mencegah reload halaman
         
@@ -226,15 +227,45 @@
         // Kumpulkan data ke dalam objek
         dataAnggota = { nama, panggilan, jk, alamat, hp, hportu };
         
-        // Simpan ke memory lokal HP
-        localStorage.setItem('memberData_pengajian', JSON.stringify(dataAnggota));
+        // Payload khusus untuk pendaftaran (action: registrasi_baru)
+        const payload = {
+            action: "registrasi_baru",
+            nama: dataAnggota.nama,
+            panggilan: dataAnggota.panggilan,
+            jk: dataAnggota.jk,
+            alamat: dataAnggota.alamat,
+            hp: dataAnggota.hp,
+            hportu: dataAnggota.hportu
+        };
 
-        showAlert('success', 'Data tersimpan di HP ini!');
-        
-        // Pindah ke Dashboard setelah 1 detik
-        setTimeout(() => {
-            tampilkanDashboard();
-        }, 1000);
+        const btnSubmit = document.getElementById('btnSubmitReg');
+        btnSubmit.innerText = "⏳ Sedang Menyimpan Data...";
+        btnSubmit.disabled = true;
+
+        // Kirim data ke Google Sheet
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            // Simpan ke memory lokal HP jika sudah berhasil dikirim
+            localStorage.setItem('memberData_pengajian', JSON.stringify(dataAnggota));
+            showAlert('success', '✅ Data Berhasil Didaftarkan!');
+            
+            // Pindah ke Dashboard setelah 1.5 detik
+            setTimeout(() => {
+                tampilkanDashboard();
+                btnSubmit.innerText = "Simpan & Lanjut 🚀";
+                btnSubmit.disabled = false;
+            }, 1500);
+        })
+        .catch(error => {
+            showAlert('error', '❌ Gagal menyimpan data. Periksa internet Anda.');
+            btnSubmit.innerText = "Simpan & Lanjut 🚀";
+            btnSubmit.disabled = false;
+        });
     }
 
     // 3. TAMPILKAN HALAMAN DASHBOARD & ISI PROFIL
@@ -255,7 +286,6 @@
     // 4. KEMBALI KE FORM UNTUK EDIT DATA
     function editDataDiri() {
         if(confirm("Yakin ingin edit data atau ganti akun?")) {
-            // Isi form dengan data lama
             document.getElementById('inputNama').value = dataAnggota.nama || '';
             document.getElementById('inputPanggilan').value = dataAnggota.panggilan || '';
             document.getElementById('inputJK').value = dataAnggota.jk || 'Laki-laki';
@@ -263,7 +293,7 @@
             document.getElementById('inputHP').value = dataAnggota.hp || '';
             document.getElementById('inputHPOrtu').value = dataAnggota.hportu || '';
 
-            hentikanScan(); // pastikan kamera mati
+            hentikanScan(); 
             document.getElementById('section-dashboard').style.display = 'none';
             document.getElementById('section-login').style.display = 'block';
         }
@@ -275,11 +305,9 @@
         document.getElementById('btnStartScanContainer').style.display = 'none';
         document.getElementById('scannerContainer').style.display = 'block';
         
-        // Inisialisasi scanner
         html5QrCode = new Html5Qrcode("reader");
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
-        // Gunakan kamera belakang (environment)
         html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
         .catch((err) => {
             showAlert('error', 'Gagal mengakses kamera. Pastikan izin kamera diberikan di browser Anda.');
@@ -298,10 +326,9 @@
 
     // 6. JIKA QR BERHASIL DI-SCAN
     function onScanSuccess(decodedText) {
-        hentikanScan(); // Langsung matikan kamera
+        hentikanScan(); 
         
-        // Opsi pengaman: Cek apakah format QR diawali dengan kata kunci (contoh "PENGAJIAN|")
-        // Jika QR Anda tidak pakai prefix, hapus/komentari blok if di bawah ini.
+        // Pilihan: Jika perlu validasi QR harus berawalan PENGAJIAN|
         if (!decodedText.startsWith("PENGAJIAN|")) {
             showAlert('error', '❌ QR Code tidak valid! Pastikan Anda scan QR dari Admin Pengajian.');
             return;
@@ -310,11 +337,11 @@
         kirimDataAbsen(decodedText);
     }
 
-    // 7. KIRIM DATA KE GOOGLE APPS SCRIPT
+    // 7. KIRIM DATA ABSEN KE GOOGLE APPS SCRIPT
     function kirimDataAbsen(qrContent) {
         showAlert('loading', '⏳ Sedang mengirim data absen...');
 
-        // Gabungkan perintah absen, isi QR, dan profil user lengkap
+        // Payload khusus untuk absensi (action: absen_qr_mandiri)
         const payload = {
             action: "absen_qr_mandiri",
             qrContent: qrContent,
@@ -328,12 +355,11 @@
 
         fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // Melewati blokir CORS Google
+            mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
         .then(() => {
-            // Karena no-cors, success response tidak terbaca utuh, namun jika masuk block then = sukses
             showAlert('success', `✅ Absen Berhasil!<br>Kehadiran atas nama <b>${dataAnggota.panggilan}</b> telah tercatat.`);
         })
         .catch(error => {
